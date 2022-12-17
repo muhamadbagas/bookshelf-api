@@ -73,16 +73,40 @@ const addBookHandler = (request, h) => {
 };
 
 // Handler untuk menampilkan seluruh buku
-const getAllBooksHandler = () => ({
-  status: 'success',
-  data: {
-    books: books.map((filteredBook) => ({
-      id: filteredBook.id,
-      name: filteredBook.name,
-      publisher: filteredBook.publisher,
-    })),
-  },
-});
+const getAllBooksHandler = (request, h) => {
+  const { name, reading, finished } = request.query;
+
+  let filteredBooks = books;
+  const haveName = name !== undefined;
+  const haveRead = reading !== undefined;
+  const haveFinish = finished !== undefined;
+
+  if (haveName) {
+    filteredBooks = filteredBooks.filter((showBook) => showBook
+      .name.toLowerCase().includes(name.toLowerCase()));
+  }
+
+  if (haveRead) {
+    filteredBooks = filteredBooks.filter((showBook) => showBook.reading === !!Number(reading));
+  }
+
+  if (haveFinish) {
+    filteredBooks = filteredBooks.filter((showBook) => showBook.finished === !!Number(finished));
+  }
+
+  const response = h.response({
+    status: 'success',
+    data: {
+      books: filteredBooks.map((book) => ({
+        id: book.id,
+        name: book.name,
+        publisher: book.publisher,
+      })),
+    },
+  });
+  response.code(200);
+  return response;
+};
 
 // Handler untuk menampilkan detail data buku berdasarkan id
 const getDetailBookByIdHandler = (request, h) => {
@@ -170,6 +194,7 @@ const editBookByIdHandler = (request, h) => {
   return response;
 };
 
+// Handler untuk menghapus buku
 const deleteBookByIdHandler = (request, h) => {
   const { id } = request.params;
 
